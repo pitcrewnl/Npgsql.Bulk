@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    tags:        
+      - v**
 
 env:
     DOTNET_NOLOGO: true
@@ -36,12 +36,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
 
+    - name: Determine version from tag
+      id: tag
+      uses: dawidd6/action-get-tag@v1
+      with:
+        strip_v: true
+
     - name: Build package (only .Net 6 version)
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd src/Npgsql.Bulk.DotNet6
-        dotnet pack -c Release /p:Version=${{ env.GITHUB_REF }} /p:PackageID=PitCrew.Npgsql.Bulk
+        dotnet pack -c Release /p:Version=${{ steps.tag.outputs.tag }} /p:PackageID=PitCrew.Npgsql.Bulk
 
     - name: NuGet Push using GPR
       if: github.ref_name == 'master'
@@ -50,3 +56,12 @@ jobs:
         gpr push \
           --api-key ${{ secrets.GITHUB_TOKEN }} \
           **/*.nupkg
+
+    - name: Create a GitHub release
+      if: github.ref_name == 'master'
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "**/*.nupkg"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        generateReleaseNotes: true
+        allowUpdates: true
