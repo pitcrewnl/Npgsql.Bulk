@@ -6,6 +6,7 @@
         <Nullable>disable</Nullable>
         <AssemblyName>Npgsql.Bulk</AssemblyName>
         <RootNamespace>Npgsql.Bulk</RootNamespace>
+        <RepositoryUrl>https://github.com/pitcrewnl/Npgsql.Bulk</RepositoryUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
