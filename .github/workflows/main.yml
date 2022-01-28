@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+    DOTNET_NOLOGO: true
+    DOTNET_CLI_TELEMETRY_OPTOUT: true
+    DOTNET_VERSION: 6.0.100
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Build package (only .Net 6 version)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd src/Npgsql.Bulk.DotNet6
+        dotnet pack -c Release /p:Version=${{ env.GITHUB_REF }} /p:PackageID=PitCrew.Npgsql.Bulk
+
+    - name: NuGet Push using GPR
+      if: github.ref_name == 'master'
+      run: |
+        dotnet tool install --global --verbosity minimal --no-cache gpr
+        gpr push \
+          --api-key ${{ secrets.GITHUB_TOKEN }} \
+          **/*.nupkg
