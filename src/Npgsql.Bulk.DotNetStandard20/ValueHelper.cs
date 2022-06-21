@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Npgsql.Bulk
 {
-    public class ValueHelper<T>
+    public static class ValueHelper<T>
     {
 
         internal static Dictionary<string, MappingInfo> MappingInfos;
